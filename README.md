@@ -6,7 +6,9 @@ Technics & Applications – code: Raf Olaerts.
 ## Werking
 - Knop A: 1 uur verwarmen · Knop B: 2 uur · Knop C: 4 uur
 - Terwijl de timer loopt, stopt elke knop de verwarming
-- Scherm toont temperatuur (CHT8305) en resterende tijd (rood = actief, groen = OFF)
+- Scherm toont enkel de resterende tijd (rood = actief, groen = OFF)
+- De temperatuur wordt bewust **niet** getoond (beslissing management): dit is een timer, geen
+  temperatuurregeling. De CHT8305 wordt enkel gelogd via de seriële monitor (115200 baud).
 - Veiligheid: relais altijd UIT bij opstart; timer herstart niet na stroomuitval
 
 ## Hardware (TinyTronics)

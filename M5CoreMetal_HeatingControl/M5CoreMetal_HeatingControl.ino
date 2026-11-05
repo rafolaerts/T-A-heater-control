@@ -9,6 +9,9 @@
  * Knop 3: 4u verwarming
  * Timer actief: elke knop = cancel
  * Veiligheid: relais altijd uit bij opstart, timer herstart niet na stroomuitval.
+ *
+ * Temperatuur wordt bewust NIET op het display getoond (beslissing management):
+ * dit is een timer, geen temperatuurregeling. De sensor wordt enkel gelogd via Serial.
  */
 
 #include <M5Stack.h>
@@ -42,7 +45,6 @@ static constexpr uint32_t DISPLAY_UPDATE_MS = 1000;
 
 // Display layout (landscape 320x240)
 #define SPRITE_H 165
-#define TEMP_Y 35
 #define COUNTDOWN_Y (SCREEN_HEIGHT / 2)  // 120 = midden display
 #define COUNTDOWN_H 70
 #define LABEL_Y 200
@@ -86,6 +88,7 @@ void updateTemperature() {
     tempSensorOk = (err == CHT8305_OK);
     if (tempSensorOk) {
       lastTemp = cht.getTemperature();
+      Serial.printf("Temp: %.1f C\n", lastTemp);  // enkel diagnose, niet op display
     }
   }
 }
@@ -112,20 +115,9 @@ void drawDisplay() {
   int cx = SCREEN_WIDTH / 2;
   int w = 240;
 
-  // Temp + countdown in sprite (double buffering = geen flikkeren)
-  sprite.fillSprite(TFT_BLACK);
-
-  // Temperatuur (groot, boven)
-  sprite.setFreeFont(FF18B);
-  sprite.setTextColor(TFT_WHITE);
+  // Countdown in sprite (double buffering = geen flikkeren)
   sprite.setTextDatum(MC_DATUM);
-  if (tempSensorOk) {
-    char buf[20];
-    snprintf(buf, sizeof(buf), "%.1f C", lastTemp);
-    sprite.drawString(buf, cx, TEMP_Y);
-  } else {
-    sprite.drawString("-- C", cx, TEMP_Y);
-  }
+  sprite.fillSprite(TFT_BLACK);
 
   // Countdown-gebied (rood/groen) - midden display, groter font
   sprite.fillRoundRect(cx - w/2, COUNTDOWN_Y - COUNTDOWN_H/2, w, COUNTDOWN_H, 8, countdownColor);
