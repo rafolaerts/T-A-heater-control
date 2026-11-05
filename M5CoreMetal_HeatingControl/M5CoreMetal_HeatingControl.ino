@@ -45,8 +45,13 @@ static constexpr uint32_t DISPLAY_UPDATE_MS = 1000;
 
 // Display layout (landscape 320x240)
 #define SPRITE_H 165
-#define COUNTDOWN_Y (SCREEN_HEIGHT / 2)  // 120 = midden display
-#define COUNTDOWN_H 70
+// Timer-vak vult de bovenzone (0..SPRITE_H), knoplabels eronder
+#define COUNTDOWN_W 312
+#define COUNTDOWN_H 150
+#define COUNTDOWN_Y (SPRITE_H / 2)          // midden van het timer-vak
+#define DIGITS_Y (COUNTDOWN_Y - 8)          // grote cijfers iets boven midden
+#define UNIT_Y (COUNTDOWN_Y + 52)           // "min" onder de cijfers
+#define FONT_7SEG_BIG 8                     // TFT_eSPI Font 8: 75 px hoog, enkel 0-9 : - .
 #define LABEL_Y 200
 #define LABEL_X_1 53
 #define LABEL_X_2 160
@@ -113,26 +118,34 @@ void drawDisplay() {
   bool active = (timerEndMs > 0);
   uint16_t countdownColor = active ? TFT_RED : TFT_DARKGREEN;
   int cx = SCREEN_WIDTH / 2;
-  int w = 240;
 
   // Countdown in sprite (double buffering = geen flikkeren)
   sprite.setTextDatum(MC_DATUM);
   sprite.fillSprite(TFT_BLACK);
 
-  // Countdown-gebied (rood/groen) - midden display, groter font
-  sprite.fillRoundRect(cx - w/2, COUNTDOWN_Y - COUNTDOWN_H/2, w, COUNTDOWN_H, 8, countdownColor);
-  sprite.setFreeFont(FF24);
+  // Timer-vak (rood = actief, groen = uit) - groot, bovenaan
+  sprite.fillRoundRect(cx - COUNTDOWN_W/2, COUNTDOWN_Y - COUNTDOWN_H/2,
+                       COUNTDOWN_W, COUNTDOWN_H, 10, countdownColor);
   sprite.setTextColor(TFT_WHITE);
   if (active) {
-    uint32_t remainingMs = timerEndMs - millis();
+    uint32_t now = millis();
+    uint32_t remainingMs = (now < timerEndMs) ? (timerEndMs - now) : 0;
     uint32_t remainingSec = (remainingMs + 500) / 1000;
     uint32_t remainingMin = remainingSec / 60;
     remainingSec = remainingSec % 60;
     char buf[16];
-    snprintf(buf, sizeof(buf), "%lu:%02lu min", (unsigned long)remainingMin, (unsigned long)remainingSec);
-    sprite.drawString(buf, cx, COUNTDOWN_Y);
+    // max "240:00" = 5 cijfers x 55 px + ':' 29 px = 304 px -> past in 312 px
+    snprintf(buf, sizeof(buf), "%lu:%02lu", (unsigned long)remainingMin, (unsigned long)remainingSec);
+    sprite.setTextFont(FONT_7SEG_BIG);
+    sprite.setTextSize(1);
+    sprite.drawString(buf, cx, DIGITS_Y);
+    sprite.setFreeFont(FF12);
+    sprite.drawString("min", cx, UNIT_Y);
   } else {
+    sprite.setFreeFont(FF24);
+    sprite.setTextSize(2);
     sprite.drawString("OFF", cx, COUNTDOWN_Y);
+    sprite.setTextSize(1);
   }
 
   sprite.pushSprite(0, 0);
