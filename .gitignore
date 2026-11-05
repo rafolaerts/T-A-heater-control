@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+._*
+# Build output
+build/
+.pio/
+*.bin
+*.elf
+*.map
+# Editors
+.vscode/
+.idea/
